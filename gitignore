@@ -1,0 +1,14 @@
+# Build results
+[Bb]in/
+[Oo]bj/
+[Ll]ogs/
+
+# IDE files
+.vs/
+.vscode/
+*.user
+*.suo
+
+# Copyrighted Game & MelonLoader assemblies
+Libs/*.dll
+Dependencies/*.dll
