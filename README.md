@@ -1,4 +1,4 @@
-# Punchy — Server-Side Bare-Handed Punching for A Township Tale
+# Punchy
 
 **Punchy** adds authoritative, purely server-side bare-handed punching to *A Township Tale* servers running MelonLoader (`v0.7.3+` / Mono). Connecting players require **zero client-side mods**.
 
