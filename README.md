@@ -51,16 +51,4 @@ All settings live under `[Punchy]` and reload cleanly via MelonLoader preference
 
 ---
 
-## Building & Running Unit Tests
-
-From `Source\Punchy\`:
-
-```powershell
-# Build Punchy.Core, Punchy.dll (net472), and Punchy.Tests (net8.0)
-dotnet build Punchy.sln -c Release
-
-# Execute automated unit tests
-dotnet test Punchy.sln -c Release --verbosity normal
-```
-
 See [ARCHITECTURE.md](ARCHITECTURE.md) for the complete verified ATT assembly breakdown, Harmony hook targets, and network replication analysis.
