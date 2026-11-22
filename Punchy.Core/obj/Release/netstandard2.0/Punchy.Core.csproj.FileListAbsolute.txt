@@ -1,0 +1,10 @@
+C:\Games\Alta\A Township Tale\Source\Punchy\Punchy.Core\obj\Release\netstandard2.0\Punchy.Core.csproj.AssemblyReference.cache
+C:\Games\Alta\A Township Tale\Source\Punchy\Punchy.Core\obj\Release\netstandard2.0\Punchy.Core.GeneratedMSBuildEditorConfig.editorconfig
+C:\Games\Alta\A Township Tale\Source\Punchy\Punchy.Core\obj\Release\netstandard2.0\Punchy.Core.AssemblyInfoInputs.cache
+C:\Games\Alta\A Township Tale\Source\Punchy\Punchy.Core\obj\Release\netstandard2.0\Punchy.Core.AssemblyInfo.cs
+C:\Games\Alta\A Township Tale\Source\Punchy\Punchy.Core\obj\Release\netstandard2.0\Punchy.Core.csproj.CoreCompileInputs.cache
+C:\Games\Alta\A Township Tale\Source\Punchy\Punchy.Core\bin\Release\netstandard2.0\Punchy.Core.deps.json
+C:\Games\Alta\A Township Tale\Source\Punchy\Punchy.Core\bin\Release\netstandard2.0\Punchy.Core.dll
+C:\Games\Alta\A Township Tale\Source\Punchy\Punchy.Core\bin\Release\netstandard2.0\Punchy.Core.pdb
+C:\Games\Alta\A Township Tale\Source\Punchy\Punchy.Core\obj\Release\netstandard2.0\Punchy.Core.dll
+C:\Games\Alta\A Township Tale\Source\Punchy\Punchy.Core\obj\Release\netstandard2.0\Punchy.Core.pdb
