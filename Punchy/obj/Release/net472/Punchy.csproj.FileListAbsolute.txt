@@ -1,7 +1,0 @@
-C:\Games\Alta\A Township Tale\Source\Punchy\Punchy\obj\Release\net472\Punchy.csproj.AssemblyReference.cache
-C:\Games\Alta\A Township Tale\Source\Punchy\Punchy\obj\Release\net472\Punchy.GeneratedMSBuildEditorConfig.editorconfig
-C:\Games\Alta\A Township Tale\Source\Punchy\Punchy\obj\Release\net472\Punchy.csproj.CoreCompileInputs.cache
-C:\Games\Alta\A Township Tale\Source\Punchy\Punchy\bin\Release\net472\Punchy.dll
-C:\Games\Alta\A Township Tale\Source\Punchy\Punchy\bin\Release\net472\Punchy.pdb
-C:\Games\Alta\A Township Tale\Source\Punchy\Punchy\obj\Release\net472\Punchy.dll
-C:\Games\Alta\A Township Tale\Source\Punchy\Punchy\obj\Release\net472\Punchy.pdb
