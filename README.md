@@ -64,3 +64,8 @@ dotnet test Punchy.sln -c Release --verbosity normal
 ```
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for the complete verified ATT assembly breakdown, Harmony hook targets, and network replication analysis.
+
+
+<p>
+    <img src="https://img.shields.io/github/downloads/JonathanDonkerlot/Punchy-att/total?style=for-the-badge&logo=github&color=7fff6e">
+</p>
