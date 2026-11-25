@@ -13,8 +13,9 @@ namespace Punchy
     /// </summary>
     public sealed class PunchHandDetector : MonoBehaviour
     {
-        private const float FistRadiusMeters = 0.095f;
+        private const float FistRadiusMeters = 0.14f;
         private const int MaxPhysicsResults = 32;
+        private const double DebugLogThrottleSeconds = 0.5d;
 
         private readonly RaycastHit[] _sphereCastHits = new RaycastHit[MaxPhysicsResults];
         private readonly Collider[] _overlapColliders = new Collider[MaxPhysicsResults];
@@ -28,6 +29,7 @@ namespace Punchy
         private PunchyConfig _config;
         private MelonLogger.Instance _log;
         private bool _initialized;
+        private double _lastDebugLogTime = -999d;
 
         public PlayerController Owner => _owner;
         public PunchHandSide HandSide => _handSide;
@@ -96,7 +98,21 @@ namespace Punchy
 
             PunchDecision swingDecision = PunchValidator.ValidateHandSwing(in context, _cooldownTracker, in cfg);
             if (!swingDecision.IsValid)
+            {
+                if (cfg.DebugLogging &&
+                    motion.Speed >= cfg.MinPunchSpeed &&
+                    (now - _lastDebugLogTime) >= DebugLogThrottleSeconds)
+                {
+                    _lastDebugLogTime = now;
+                    bool interactorNull = _controller.Interactor == null;
+                    _log?.Msg(
+                        $"[Punchy][Debug] {_handSide} fast swing blocked: {swingDecision.RejectReason} | " +
+                        $"speed={motion.Speed:F2} grip={pose.GripAxis:F2} free={pose.IsFreeGestureMode} " +
+                        $"explicit={pose.HasExplicitGesture} mask={pose.ActiveFingerMask} " +
+                        $"hasGesture={pose.HasGestureData} holding={isHolding} interactorNull={interactorNull}");
+                }
                 return;
+            }
 
             DetectAndApplyHit(in context, in motion, in cfg);
         }
@@ -297,11 +313,21 @@ namespace Punchy
                 in cfg);
 
             if (!decision.IsValid)
+            {
+                if (cfg.DebugLogging &&
+                    (context.CurrentTime - _lastDebugLogTime) >= DebugLogThrottleSeconds)
+                {
+                    _lastDebugLogTime = context.CurrentTime;
+                    _log?.Msg(
+                        $"[Punchy][Debug] {_handSide} candidate '{candidate.gameObject.name}' rejected: {decision.RejectReason}");
+                }
                 return false;
+            }
 
             if (!PunchDamageBridge.ApplyPunchHit(
                     _owner,
                     _controller,
+                    _handSide,
                     candidate,
                     detector,
                     health,

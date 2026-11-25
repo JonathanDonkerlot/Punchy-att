@@ -7,8 +7,8 @@ namespace Punchy.Tests
     {
         [Theory]
         [InlineData(0.00f, false)]
-        [InlineData(0.50f, false)]
-        [InlineData(0.69f, false)]
+        [InlineData(0.44f, false)]
+        [InlineData(0.45f, true)]
         [InlineData(0.70f, true)]
         [InlineData(1.00f, true)]
         public void GradualGripMode_RequiresThreshold(float gripAxis, bool expectedClosed)

@@ -6,10 +6,19 @@
 
 ## Key Features
 
-- **100% Server-Side Authority:** All hand velocity sampling, empty-hand gating, fist pose evaluation, cooldown checks, self-hit exclusion, and damage application run strictly on the server (`NetworkSceneManager.IsServer`).
+- **100% Server-Side Authority:** All hand velocity sampling, empty-hand gating, fist pose evaluation, cooldown checks, self-hit exclusion, ragdoll triggers, and damage application run strictly on the server (`NetworkSceneManager.IsServer`).
 - **Native ATT Damage Integration:** Routes hits through ATT's native `ImpactDetector.OnImpactHit` / `HealthObject.DetectImpact` pipeline as `ImpactType.Blunt`:
   - Default **0.10 HP** base damage (20 punches to defeat a default `2.0` HP player), optionally scaling up to **0.15 HP** with swing speed.
-  - Automatically respects server PvP rules (`IsPVPEnabled`, `PVPMultiplier`, `PVPCrippleMultiplier`), armor mitigation, `DamageX`, death attribution (`KilledData.killerPlayer`), AI creature aggro (`Agent.HealthChanged`), player hurt flash (`HurtVignette`), and breakable static objects.
+  - Automatically respects server PvP rules (`IsPVPEnabled`, `PVPMultiplier`, `PVPCrippleMultiplier`), armor mitigation, `DamageX`, death attribution (`KilledData.killerPlayer`), AI creature aggro (`Agent.HealthChanged`), player hurt flash (`HurtVignette`), combat dummies, and breakable static objects.
+- **Native Hit VFX/SFX Replication & Kinetic Impact Feedback:**
+  - Broadcasts native creature/prop hit effects (such as the orange Spriggull hit burst and blunt sound) to unmodded clients via ATT's `ImpactDetectorSync` pipeline.
+  - Layers pooled kinetic shockwave, spark, and dust impact particles plus `FistBump` / `WoodThump` audio on non-headless hosts.
+- **Realistic `RagdollLib` Physics Integration (v1.2.0+):**
+  - Integrates softly with `RagdollLib.dll` (`[assembly: MelonOptionalDependencies("RagdollLib")]`) — if `RagdollLib.dll` is present in `Mods\`, punches trigger realistic procedural ragdoll knockdowns without launching targets to the moon:
+    - **Small Creatures (`Spriggull`, `Babu`, `Schmeechee`, `FireBug`, `Dragonfly`, `Wyrm`):** Any normal punch (`>= 2.2 m/s`) ragdolls them with bounded grounded force (`45`–`85 N*s`, `2.2s` recovery).
+    - **Players:** Require a heavy **haymaker** (`>= 5.0 m/s`) to ragdoll (`65`–`115 N*s`, `2.5s` recovery); everyday light jabs will damage without ragdolling.
+    - **Large Creatures (`Gotera`, `GreaterGotera`, `Turabada`, `Phantom`):** Require a heavy haymaker (`>= 5.5 m/s`, `75`–`130 N*s`, `2.0s` recovery).
+    - **Anti-Moon Physics Guard:** Vertical punch components and impulse magnitudes are clamped (`<= 250 N*s`, upward lift capped `<= 0.35`) so uppercuts knock targets onto the ground rather than into orbit.
 - **Anti-Exploit & False-Positive Guards:**
   - **Empty-Hand Lock:** Swinging while holding or interacting with any weapon, tool, torch, pouch, or world interactable never triggers fist damage (plus a `0.15s` post-release grace window).
   - **Closed-Fist Verification:** Reads ATT's replicated `HandGestureController` state across OpenXR/Quest grip axis, explicit gesture bitmasks, and Valve Index finger curls (with a `0.12s` pose-lag grace window and graceful fallback).
@@ -21,19 +30,26 @@
 
 ## Server Installation
 
-1. Ensure your *A Township Tale* server (Mono PCVR build) has **MelonLoader** (`v0.7.3`) installed.
+1. Ensure your *A Township Tale* server (Mono PCVR build) has **MelonLoader** (`v0.7.3+`) installed.
 2. Copy `Punchy.dll` into the server's `Mods\` folder:
    ```text
    <A Township Tale Server>\Mods\Punchy.dll
    ```
-3. Start the server once to generate the `[Punchy]` section in `UserData\MelonPreferences.cfg`.
-4. Clients connect normally with an unmodded game client.
+3. *(Optional, Recommended for Ragdoll Knockdowns)* Install **`RagdollLib.dll`** into `Mods\` alongside `Punchy.dll`:
+   ```text
+   <A Township Tale Server>\Mods\RagdollLib.dll
+   ```
+   > **Player Haymaker Ragdolls:** To allow haymaker punches to ragdoll `PlayerCharacter` rigs, make sure `AllowPlayerRagdoll = true` is set under `[RagdollLib]` in `UserData\MelonPreferences.cfg` (this defaults to `false` in `RagdollLib`).
+4. Start the server once to generate the `[Punchy]` section in `UserData\MelonPreferences.cfg`.
+5. Clients connect normally with an unmodded game client.
 
 ---
 
 ## Configuration (`UserData/MelonPreferences.cfg`)
 
 All settings live under `[Punchy]` and reload cleanly via MelonLoader preferences:
+
+### Core Combat & Feedback
 
 | Option | Type | Default | Description |
 |---|---|---|---|
@@ -48,6 +64,29 @@ All settings live under `[Punchy]` and reload cleanly via MelonLoader preference
 | `EnablePunchVfx` | `bool` | `true` | Spawns layered shockwave ring, kinetic spark, and dust puff VFX on punch impacts (non-headless builds). |
 | `PunchVfxScale` | `float` | `1.0` | Scale multiplier (`0.1` to `3.0`) for kinetic punch impact VFX. |
 | `EnableSurfaceImpactVfx` | `bool` | `true` | Plays subtle spark/dust VFX and thud SFX when punching solid world surfaces. |
+| `DebugLogging` | `bool` | `false` | Logs throttled server punch hit and swing rejection diagnostics to the MelonLoader console. |
+
+### `RagdollLib` Physics Settings (`[Punchy]`)
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `EnableRagdoll` | `bool` | `true` | Master toggle for triggering `RagdollLib` physics on punches (no-op if `RagdollLib.dll` is not installed). |
+| `RagdollPlayersOnHaymaker` | `bool` | `true` | Enables ragdolling players on heavy haymakers (also requires `[RagdollLib] AllowPlayerRagdoll = true`). |
+| `PlayerRagdollMinSpeed` | `float` | `5.0` | Minimum haymaker hand speed (`m/s`) required to ragdoll a player. |
+| `PlayerRagdollBaseImpulse` | `float` | `65.0` | Base impulse (`N*s`) applied at `PlayerRagdollMinSpeed` (clamped `<= 250`). |
+| `PlayerRagdollMaxImpulse` | `float` | `115.0` | Maximum impulse (`N*s`) for fastest player haymakers (clamped `<= 250`). |
+| `PlayerRagdollDuration` | `float` | `2.5` | Seconds before a haymaker-ragdolled player recovers. |
+| `RagdollSmallCreatures` | `bool` | `true` | Enables ragdolling small creatures (`Spriggull`, `Babu`, `Schmeechee`, `FireBug`, `Dragonfly`, `Wyrm`). |
+| `SmallCreatureRagdollMinSpeed` | `float` | `2.2` | Minimum punch speed (`m/s`) to ragdoll small creatures (`2.2` = any normal punch). |
+| `SmallCreatureRagdollBaseImpulse` | `float` | `45.0` | Base impulse (`N*s`) for normal punches on Spriggulls and small creatures. |
+| `SmallCreatureRagdollMaxImpulse` | `float` | `85.0` | Maximum capped impulse (`N*s`) for heavy punches on small creatures. |
+| `SmallCreatureRagdollDuration` | `float` | `2.2` | Seconds before a ragdolled small creature recovers. |
+| `RagdollLargeCreatures` | `bool` | `true` | Enables ragdolling large creatures (`Gotera`, `GreaterGotera`, `Turabada`, `Phantom`). |
+| `LargeCreatureRagdollMinSpeed` | `float` | `5.5` | Minimum haymaker speed (`m/s`) required to ragdoll large creatures. |
+| `LargeCreatureRagdollBaseImpulse` | `float` | `75.0` | Base impulse (`N*s`) applied on large-creature haymakers. |
+| `LargeCreatureRagdollMaxImpulse` | `float` | `130.0` | Maximum capped impulse (`N*s`) on large-creature haymakers. |
+| `LargeCreatureRagdollDuration` | `float` | `2.0` | Seconds before a ragdolled large creature recovers. |
+| `RagdollUpwardBoost` | `float` | `0.14` | Subtle upward lift ratio (`0.0` to `0.35`) for natural grounded knockdowns. |
 
 ---
 
@@ -63,7 +102,7 @@ dotnet build Punchy.sln -c Release
 dotnet test Punchy.sln -c Release --verbosity normal
 ```
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) for the complete verified ATT assembly breakdown, Harmony hook targets, and network replication analysis.
+See [ARCHITECTURE.md](ARCHITECTURE.md) for the complete verified ATT assembly breakdown, `RagdollLib` integration details, Harmony hook targets, and network replication analysis.
 
 
 <p>

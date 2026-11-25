@@ -5,8 +5,9 @@ using MelonLoader.Utils;
 using Punchy.Core;
 using UnityEngine;
 
-[assembly: MelonInfo(typeof(Punchy.PunchyMod), "Punchy", "1.0.0", "Punchy")]
+[assembly: MelonInfo(typeof(Punchy.PunchyMod), "Punchy", "1.2.0", "Punchy")]
 [assembly: MelonGame("Alta", "A Township Tale")]
+[assembly: MelonOptionalDependencies("RagdollLib")]
 
 namespace Punchy
 {
@@ -32,6 +33,7 @@ namespace Punchy
             }
 
             _config.Initialize();
+            PunchRagdollBridge.Initialize(LoggerInstance);
             _manager = new PunchServerManager(_config, LoggerInstance);
 
             HarmonyPatches.Apply(HarmonyInstance, LoggerInstance);
@@ -47,10 +49,12 @@ namespace Punchy
 
             PunchConfigSnapshot snap = _config.Snapshot;
             LoggerInstance.Msg(
-                $"[Punchy] Initialized (Server-Side Bare-Handed Combat) | " +
+                $"[Punchy] v1.2.0 Initialized (Server-Side Bare-Handed Combat) | " +
                 $"Enabled={snap.Enabled}, BaseDmg={snap.BasePunchDamage:F2}, MaxDmg={snap.MaxPunchDamage:F2}, " +
                 $"VelScaling={snap.EnableVelocityScaling}, MinSpeed={snap.MinPunchSpeed:F2} m/s, " +
-                $"Cooldown={snap.PunchCooldownSeconds:F2}s, RequireFist={snap.RequireClosedFist}, AllowPvP={snap.AllowPvPPunching}");
+                $"Cooldown={snap.PunchCooldownSeconds:F2}s, RequireFist={snap.RequireClosedFist}, AllowPvP={snap.AllowPvPPunching}, " +
+                $"RagdollLib={PunchRagdollBridge.IsAvailable}, RagdollEnabled={snap.EnableRagdoll} " +
+                $"(PlayerHaymaker>={snap.PlayerRagdollMinSpeed:F1}m/s, SmallCreature>={snap.SmallCreatureRagdollMinSpeed:F1}m/s)");
         }
 
         public override void OnPreferencesLoaded()
@@ -82,6 +86,7 @@ namespace Punchy
             _reconcileTimer = 0f;
             _manager?.ClearAll();
             PunchVfxSystem.Cleanup();
+            NativeImpactSyncBridge.ClearCache();
         }
 
         public override void OnDeinitializeMelon()
@@ -100,6 +105,7 @@ namespace Punchy
 
             _manager?.ClearAll();
             PunchVfxSystem.Cleanup();
+            NativeImpactSyncBridge.ClearCache();
 
             try
             {

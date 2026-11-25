@@ -103,7 +103,7 @@ namespace Punchy
                     destroyable = collider.GetComponentInParent<DestroyableStaticObject>();
             }
 
-            if (health == null && destroyable == null)
+            if (health == null && destroyable == null && detector == null)
                 return false;
 
             if (!ApplicationManager.IsHeadless && _fallbackHitEffect == null && detector != null && detector.Settings != null)
@@ -143,17 +143,30 @@ namespace Punchy
             bool isAliveOrBreakable;
             if (health != null)
             {
-                isAliveOrBreakable = health.enabled && health.Health > 0f;
-                if (isAliveOrBreakable && targetPlayerHealth != null)
+                if (targetPlayerHealth != null)
                 {
                     PlayerController targetPc = targetPlayerHealth.Player;
-                    if (targetPc == null || !targetPc.IsAlive || targetPc.IsDowned || targetPc.IsSpirit || targetPc.IsIgnoringDamage)
-                        isAliveOrBreakable = false;
+                    isAliveOrBreakable = health.enabled &&
+                                         health.Health > 0f &&
+                                         targetPc != null &&
+                                         targetPc.IsAlive &&
+                                         !targetPc.IsDowned &&
+                                         !targetPc.IsSpirit &&
+                                         !targetPc.IsIgnoringDamage;
+                }
+                else if (health.MaxHealth > 0f)
+                {
+                    isAliveOrBreakable = health.enabled && health.Health > 0f;
+                }
+                else
+                {
+                    // Targets with MaxHealth <= 0 (e.g., training/combat dummies) remain punchable via ImpactDetector.
+                    isAliveOrBreakable = detector != null;
                 }
             }
             else
             {
-                isAliveOrBreakable = destroyable != null && detector != null;
+                isAliveOrBreakable = detector != null;
             }
 
             int attackerPlayerId = attacker.GetInstanceID();
@@ -230,6 +243,7 @@ namespace Punchy
         public static bool ApplyPunchHit(
             PlayerController attacker,
             Controller handController,
+            PunchHandSide handSide,
             Collider hitCollider,
             ImpactDetector detector,
             HealthObject health,
@@ -245,13 +259,14 @@ namespace Punchy
             if (!NetworkSceneManager.IsServer || attacker == null || hitCollider == null)
                 return false;
 
-            if (health == null && destroyable == null)
+            if (health == null && destroyable == null && detector == null)
                 return false;
 
             try
             {
                 Vector3 safeDir = punchDirection.sqrMagnitude > 1e-6f ? punchDirection.normalized : Vector3.forward;
                 Vector3 safeNormal = hitNormal.sqrMagnitude > 1e-6f ? hitNormal.normalized : -safeDir;
+                float hpBefore = health != null ? health.Health : -1f;
 
                 // Construct plain ImpactHit (never ImpactHitWithTool with Tool==null, which NREs in HealthObject.ReceiveDamage).
                 var hit = new ImpactHit(
@@ -291,6 +306,8 @@ namespace Punchy
                     return false;
                 }
 
+                float hpAfter = health != null ? health.Health : -1f;
+
                 if (health != null && health.IsCombatant && attacker.Entity != null)
                 {
                     NetworkEntity attackeeEntity = health.Entity != null ? health.Entity : attacker.Entity;
@@ -298,8 +315,19 @@ namespace Punchy
                     attacker.OnCausedCombat(attackeeEntity, distSqr, hit.HealthDamage);
                 }
 
-                // Subtle physical knockback impulse on dynamic non-player rigidbodies (creatures/props).
-                if (!(health is PlayerHealth))
+                // Trigger procedural ragdoll via RagdollLib when installed and velocity threshold is met.
+                bool ragdolled = PunchRagdollBridge.TryApplyPunchRagdoll(
+                    health,
+                    detector,
+                    hitCollider,
+                    hitPoint,
+                    safeDir,
+                    decision.Speed,
+                    in config,
+                    log);
+
+                // Subtle physical knockback impulse on dynamic non-player rigidbodies when not already ragdolled.
+                if (!ragdolled && !(health is PlayerHealth))
                 {
                     Rigidbody targetRb = hitCollider.attachedRigidbody;
                     if (targetRb != null && !targetRb.isKinematic)
@@ -310,6 +338,30 @@ namespace Punchy
                 }
 
                 PunchVfxParams vfx = PunchVfxCalculator.Calculate(decision.Speed, isDamageableHit: true, in config);
+
+                bool nativeSynced = false;
+                if (detector != null && !(health is PlayerHealth))
+                {
+                    float syncEff = 0.65f + (0.34f * vfx.Intensity);
+                    nativeSynced = NativeImpactSyncBridge.BroadcastNativeImpactEffects(
+                        detector,
+                        health,
+                        attacker,
+                        hitPoint,
+                        safeNormal,
+                        syncEff);
+                }
+
+                if (config.DebugLogging)
+                {
+                    string targetName = health != null
+                        ? health.gameObject.name
+                        : (detector != null ? detector.gameObject.name : hitCollider.gameObject.name);
+                    log?.Msg(
+                        $"[Punchy] HIT {targetName} | hand={handSide} speed={decision.Speed:F2} dmg={decision.HealthDamage:F3} " +
+                        $"hp={hpBefore:F2}->{hpAfter:F2} ragdoll={ragdolled} nativeSync={nativeSynced} detector={(detector != null)}");
+                }
+
                 PlayFeedbackIfNonHeadless(attacker, handController, hitCollider, detector, hitPoint, safeNormal, safeDir, in vfx);
                 return true;
             }

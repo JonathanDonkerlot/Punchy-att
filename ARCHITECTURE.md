@@ -180,8 +180,9 @@ IL inspection of `HealthObject.ReceiveDamage` and `PlayerHealth.ReceiveDamage` r
 
 | Effect | Native ATT Mechanism | Headless vs Listen Server / Client Replication |
 |---|---|---|
-| **Hit Particle VFX** | Native `ImpactDetector.OnImpactHit(hit)` -> `ImpactDetectorSettings.PlayEffects(hit)` (plus `PickupTypeSettings.DefaultBreakEffect` fallback), layered with `PunchVfxSystem` (pooled 3-layer procedural `ParticleSystem` rig: shockwave ring + stretched sparks + impact dust puff scaled by `PunchVfxCalculator`) | `ImpactDetector.Awake()` and `PunchVfxSystem` skip GPU/particle emission when `ApplicationManager.IsHeadless` is true; on listen servers/hosts, both combat and non-damageable world-surface punches render responsive hit VFX at `hit.Point`. |
-| **Blunt Impact SFX** | `AudioManager.Instance.PlaySoundEffectAt(SoundEffectExtensions.Resolve(SoundEffect.FistBump, targetGo), hitPoint, targetGo)` (value `51`; fallbacks `WoodThump = 71`, `ShieldBashWood = 29`) | Plays in non-headless server/host builds. ATT has **no** generic server-to-client arbitrary-position SFX RPC in `Root.Township.dll` (Wwise `SoundEffect` calls are local except component-specific `MethodSync`s like `DownedState` / `RespawnShrine`). |
+| **Native Orange Creature/Prop Hit VFX & Sound (Replicated to Unmodded Clients)** | `NativeImpactSyncBridge.BroadcastNativeImpactEffects` sends `ImpactDetector.ImpactSyncArguments` via `ImpactDetectorCentral.SendArguments` (or `ImpactDetector.syncImpact.SendToChunks`) referencing an unheld, chunk-spawned proxy `ImpactTool` | **Replicated to all unmodded clients in the chunk** even from headless dedicated servers! Clients run `GenerateImpactOnDetector(...).Hit()` -> `OnToolHit` -> `ImpactDetectorSettings.PlayEffects(hit)` (spawning the exact native orange Spriggull hit effect and playing the native impact sound). `HealthObject.ReceiveDamage` and `DurabilityModule.AffectDurability` both no-op on non-servers (`zero duplicate damage`, `zero durability loss`), and `PlayerWielder == null` avoids client-to-server echo. Skipped for `PlayerHealth` targets because `ImpactDetector.SyncImpact` rejects `PlayerHealth` when `fromPlayer` differs. |
+| **Layered Kinetic VFX** | `PunchVfxSystem` (pooled 3-layer procedural `ParticleSystem` rig: shockwave ring + stretched sparks + impact dust puff scaled by `PunchVfxCalculator`) | Runs in non-headless server/host builds alongside `ImpactDetector.OnImpactHit` (`ImpactDetectorSettings.PlayEffects`) and `PickupTypeSettings.DefaultBreakEffect` fallback; skipped on headless servers (`ApplicationManager.IsHeadless`). |
+| **Local Host Blunt Impact SFX** | `AudioManager.Instance.PlaySoundEffectAt(SoundEffectExtensions.Resolve(SoundEffect.FistBump, targetGo), hitPoint, targetGo)` (value `51`; fallbacks `WoodThump = 71`, `ShieldBashWood = 29`) | Plays locally on non-headless builds / listen hosts. Remote clients hear the native target impact sound replicated via `NativeImpactSyncBridge` above. |
 | **Client-Visible Replicated Feedback (Zero Client Mods)** | Native `StatManager` (health/cripple), `PlayerHealth.UpdateVisuals` (`HurtVignette` flash), `HealthObject.syncDeath` + `KilledData`, `Agent` AI aggro + `NetworkAnimator`, `NetworkRigidbody` impulse, `ModifiableStaticManager` prop break | **100% replicated to unmodded vanilla clients** automatically through ATT's native sync pipeline! |
 | **Attacker Local Host Haptics** | `Controller.TriggerHaptic(0.6f, 0.08f, 120f)` | Fires if `attacker.IsLocalPlayer`. |
 
@@ -219,3 +220,35 @@ Additional lifecycle safety nets:
 | `EnablePunchVfx` | `bool` | `true` | Enables pooled 3-layer shockwave/spark/dust punch impact VFX (non-headless builds) |
 | `PunchVfxScale` | `float` | `1.0` | Uniform scale multiplier (`0.1` to `3.0`) for punch impact VFX |
 | `EnableSurfaceImpactVfx` | `bool` | `true` | Enables subtle punch VFX + blunt thud SFX when punching solid non-damageable world surfaces |
+| `DebugLogging` | `bool` | `false` | Enables throttled punch hit/rejection console logs |
+| `EnableRagdoll` | `bool` | `true` | Master toggle for optional `RagdollLib` punch ragdolls |
+| `RagdollPlayersOnHaymaker` | `bool` | `true` | Enables haymaker ragdolls on `PlayerCharacter` rigs (also requires `[RagdollLib] AllowPlayerRagdoll = true`) |
+| `PlayerRagdollMinSpeed` | `float` | `5.0` | Minimum haymaker hand speed (`m/s`) to ragdoll a player |
+| `PlayerRagdollBaseImpulse` | `float` | `65.0` | Base player knockdown impulse (`N*s`, clamped `5..250`) |
+| `PlayerRagdollMaxImpulse` | `float` | `115.0` | Maximum player knockdown impulse (`N*s`, clamped `<= 250`) |
+| `PlayerRagdollDuration` | `float` | `2.5` | Player ragdoll recovery duration (`s`) |
+| `RagdollSmallCreatures` | `bool` | `true` | Enables punch ragdolls on small creatures (`Spriggull`, `Babu`, `Schmeechee`, `FireBug`, `Dragonfly`, `Wyrm`) |
+| `SmallCreatureRagdollMinSpeed` | `float` | `2.2` | Minimum punch speed (`m/s`) to ragdoll small creatures |
+| `SmallCreatureRagdollBaseImpulse` | `float` | `45.0` | Base impulse (`N*s`) for normal punches on small creatures |
+| `SmallCreatureRagdollMaxImpulse` | `float` | `85.0` | Maximum impulse (`N*s`) on small creatures |
+| `SmallCreatureRagdollDuration` | `float` | `2.2` | Small creature ragdoll recovery duration (`s`) |
+| `RagdollLargeCreatures` | `bool` | `true` | Enables haymaker ragdolls on large creatures (`Gotera`, `GreaterGotera`, `Turabada`, `Phantom`) |
+| `LargeCreatureRagdollMinSpeed` | `float` | `5.5` | Minimum haymaker speed (`m/s`) to ragdoll large creatures |
+| `LargeCreatureRagdollBaseImpulse` | `float` | `75.0` | Base impulse (`N*s`) on large-creature haymakers |
+| `LargeCreatureRagdollMaxImpulse` | `float` | `130.0` | Maximum impulse (`N*s`) on large creatures |
+| `LargeCreatureRagdollDuration` | `float` | `2.0` | Large creature ragdoll recovery duration (`s`) |
+| `RagdollUpwardBoost` | `float` | `0.14` | Grounded upward lift ratio (`0.0` to `0.35`) |
+
+---
+
+## 9. Optional `RagdollLib` Integration (v1.2.0+)
+
+- **Soft Dependency Loading:** `PunchyMod` declares `[assembly: MelonOptionalDependencies("RagdollLib")]`, `Punchy.csproj` references `Mods\RagdollLib.dll` with `<Private>false</Private>`, and all references to `RagdollLib.API.RagdollAPI` are isolated inside `[MethodImpl(MethodImplOptions.NoInlining)]` calls in `PunchRagdollBridge`, guarded by `AppDomain.CurrentDomain.GetAssemblies()` detection. If `RagdollLib.dll` is not installed, `Punchy.dll` loads and runs normally without ragdolls.
+- **Target Classification (`Alta.Intelligence.Agent` subclasses verified in `Root.Township.dll`):**
+  - `Player`: `PlayerHealth` or `PlayerCharacter` ancestor -> requires heavy haymaker (`>= 5.0 m/s`, `65..115 N*s`, `2.5s`), plus `[RagdollLib] AllowPlayerRagdoll = true`.
+  - `SmallCreature`: `Spriggull`, `Babu`, `Schmeechee`, `FireBug`, `Dragonfly`, `Wyrm` -> triggers on normal punch (`>= 2.2 m/s`, `45..85 N*s`, `2.2s`).
+  - `LargeCreature`: `Gotera`, `GreaterGotera`, `Turabada`, `Phantom` (or any other `Agent` fallback) -> requires heavy haymaker (`>= 5.5 m/s`, `75..130 N*s`, `2.0s`).
+  - Non-creature static props / training dummies (`combat_dummy(Clone)`) without `Agent` or `PlayerCharacter` return `None`.
+- **Anti-Moon Impulse Shaping (`PunchRagdollCalculator`):**
+  - Vertical component of the incoming punch direction is clamped to `[-0.25, +0.35]` before blending `RagdollUpwardBoost` (`0.14`), and all impulse magnitudes are clamped (`<= 250 N*s` in `PunchConfigSnapshot.Sanitize()`).
+  - When `RagdollAPI.TriggerRagdoll(...)` succeeds on a hit, `PunchDamageBridge` skips its fallback `Rigidbody.AddForceAtPosition` knockback so forces never double-stack.

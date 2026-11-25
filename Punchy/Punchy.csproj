@@ -25,6 +25,10 @@
       <HintPath>..\..\..\MelonLoader\net35\0Harmony.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="RagdollLib">
+      <HintPath>..\..\..\Mods\RagdollLib.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="Root.Township">
       <HintPath>..\..\..\A Township Tale_Data\Managed\Root.Township.dll</HintPath>
       <Private>false</Private>
