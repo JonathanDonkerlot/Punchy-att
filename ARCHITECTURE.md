@@ -224,30 +224,32 @@ Additional lifecycle safety nets:
 | `EnableRagdoll` | `bool` | `true` | Master toggle for optional `RagdollLib` punch ragdolls |
 | `RagdollPlayersOnHaymaker` | `bool` | `true` | Enables haymaker ragdolls on `PlayerCharacter` rigs (also requires `[RagdollLib] AllowPlayerRagdoll = true`) |
 | `PlayerRagdollMinSpeed` | `float` | `5.0` | Minimum haymaker hand speed (`m/s`) to ragdoll a player |
-| `PlayerRagdollBaseImpulse` | `float` | `155.0` | Base player knockdown impulse (`N*s`, clamped `5..350`) |
-| `PlayerRagdollMaxImpulse` | `float` | `225.0` | Maximum player knockdown impulse (`N*s`, clamped `<= 350`) |
-| `PlayerRagdollDuration` | `float` | `3.0` | Player ragdoll recovery duration (`s`) |
+| `PlayerRagdollBaseImpulse` | `float` | `105.0` | Base player knockdown impulse (`N*s`, clamped `5..350`) |
+| `PlayerRagdollMaxImpulse` | `float` | `160.0` | Maximum player knockdown impulse (`N*s`, clamped `<= 350`) |
+| `PlayerRagdollDuration` | `float` | `2.8` | Player ragdoll recovery duration (`s`) |
 | `RagdollSmallCreatures` | `bool` | `true` | Enables punch ragdolls on small creatures (`Spriggull`, `Babu`, `Schmeechee`, `FireBug`, `Dragonfly`, `Wyrm`) |
 | `SmallCreatureRagdollMinSpeed` | `float` | `2.2` | Minimum punch speed (`m/s`) to ragdoll small creatures |
-| `SmallCreatureRagdollBaseImpulse` | `float` | `135.0` | Base impulse (`N*s`) for normal punches on small creatures |
-| `SmallCreatureRagdollMaxImpulse` | `float` | `195.0` | Maximum impulse (`N*s`) on small creatures |
-| `SmallCreatureRagdollDuration` | `float` | `3.0` | Small creature ragdoll recovery duration (`s`) |
+| `SmallCreatureRagdollBaseImpulse` | `float` | `85.0` | Base impulse (`N*s`) for normal punches on small creatures |
+| `SmallCreatureRagdollMaxImpulse` | `float` | `135.0` | Maximum impulse (`N*s`) on small creatures |
+| `SmallCreatureRagdollDuration` | `float` | `2.6` | Small creature ragdoll recovery duration (`s`) |
 | `RagdollLargeCreatures` | `bool` | `true` | Enables haymaker ragdolls on large creatures (`Gotera`, `GreaterGotera`, `Turabada`, `Phantom`) |
 | `LargeCreatureRagdollMinSpeed` | `float` | `5.5` | Minimum haymaker speed (`m/s`) to ragdoll large creatures |
-| `LargeCreatureRagdollBaseImpulse` | `float` | `175.0` | Base impulse (`N*s`) on large-creature haymakers |
-| `LargeCreatureRagdollMaxImpulse` | `float` | `250.0` | Maximum impulse (`N*s`) on large creatures |
-| `LargeCreatureRagdollDuration` | `float` | `2.8` | Large creature ragdoll recovery duration (`s`) |
-| `RagdollUpwardBoost` | `float` | `0.32` | Grounded upward lift ratio (`0.0` to `0.50`) |
+| `LargeCreatureRagdollBaseImpulse` | `float` | `120.0` | Base impulse (`N*s`) on large-creature haymakers |
+| `LargeCreatureRagdollMaxImpulse` | `float` | `180.0` | Maximum impulse (`N*s`) on large creatures |
+| `LargeCreatureRagdollDuration` | `float` | `2.5` | Large creature ragdoll recovery duration (`s`) |
+| `RagdollUpwardBoost` | `float` | `0.22` | Grounded upward lift ratio (`0.0` to `0.50`) |
 
 ---
 
-## 9. Optional `RagdollLib` Integration (v1.2.1+)
+## 9. Optional `RagdollLib` Integration (v1.2.2+)
 
-- **Soft Dependency Loading:** `PunchyMod` declares `[assembly: MelonOptionalDependencies("RagdollLib")]`, `Punchy.csproj` references `Mods\RagdollLib.dll` with `<Private>false</Private>`, and all references to `RagdollLib.API.RagdollAPI` are isolated inside `[MethodImpl(MethodImplOptions.NoInlining)]` calls in `PunchRagdollBridge`, guarded by `AppDomain.CurrentDomain.GetAssemblies()` detection. If `RagdollLib.dll` is not installed, `Punchy.dll` loads and runs normally without ragdolls.
+- **Soft Dependency & Client/Server Simulation:** `PunchyMod` declares `[assembly: MelonOptionalDependencies("RagdollLib")]`, `Punchy.csproj` references `Mods\RagdollLib.dll` with `<Private>false</Private>`, and all references to `RagdollLib.API.RagdollAPI` are isolated inside `[MethodImpl(MethodImplOptions.NoInlining)]` calls in `PunchRagdollBridge`.
+  - When `NetworkSceneManager.IsServer` is `true`, `Punchy` runs full combat authority (damage, PvP, death attribution, native VFX sync) plus server-side `RagdollLib` simulation (AI stop + root tracking).
+  - When `!NetworkSceneManager.IsServer` and `RagdollLib.dll` is present, `PunchHandDetector` runs **visual-only ragdoll detection** (`PunchRagdollBridge.TryApplyPunchRagdoll`, zero damage/health edits) so `RagdollController` suspends `NetworkRigidbody` & `Animator` locally and renders full-rig procedural ragdoll limbs instead of stiff root-only sliding.
 - **Target Classification (`Alta.Intelligence.Agent` subclasses verified in `Root.Township.dll`):**
-  - `Player`: `PlayerHealth` or `PlayerCharacter` ancestor -> requires heavy haymaker (`>= 5.0 m/s`, `155..225 N*s`, `3.0s`), plus `[RagdollLib] AllowPlayerRagdoll = true`.
-  - `SmallCreature`: `Spriggull`, `Babu`, `Schmeechee`, `FireBug`, `Dragonfly`, `Wyrm` -> triggers on normal punch (`>= 2.2 m/s`, `135..195 N*s`, `3.0s`).
-  - `LargeCreature`: `Gotera`, `GreaterGotera`, `Turabada`, `Phantom` (or any other `Agent` fallback) -> requires heavy haymaker (`>= 5.5 m/s`, `175..250 N*s`, `2.8s`).
+  - `Player`: `PlayerHealth` or `PlayerCharacter` ancestor -> requires heavy haymaker (`>= 5.0 m/s`, `105..160 N*s`, `2.8s`), plus `[RagdollLib] AllowPlayerRagdoll = true`.
+  - `SmallCreature`: `Spriggull`, `Babu`, `Schmeechee`, `FireBug`, `Dragonfly`, `Wyrm` -> triggers on normal punch (`>= 2.2 m/s`, `85..135 N*s`, `2.6s`).
+  - `LargeCreature`: `Gotera`, `GreaterGotera`, `Turabada`, `Phantom` (or any other `Agent` fallback) -> requires heavy haymaker (`>= 5.5 m/s`, `120..180 N*s`, `2.5s`).
   - Non-creature static props / training dummies (`combat_dummy(Clone)`) without `Agent` or `PlayerCharacter` return `None`.
 - **Upper-Body Torque Targeting & Anti-Moon Shaping (`PunchRagdollBridge` + `PunchRagdollCalculator`):**
   - Resolves and passes `NetworkEntity.PrefabRoot.transform` directly into `RagdollAPI.TriggerRagdoll(...)`, blends horizontal punch direction (`60%`) with attacker-to-target away direction (`40%`), and lifts hit points below `root.y + 0.55m` to `root.y + 0.60m` (upper torso/chest) so `RagdollController.ApplyImpulse` creates visible limb/spine rotational tumble instead of stiff pelvis sliding.

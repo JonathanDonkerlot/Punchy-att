@@ -73,20 +73,20 @@ namespace Punchy.Core
             bool enableRagdoll = true,
             bool ragdollPlayersOnHaymaker = true,
             float playerRagdollMinSpeed = 5.0f,
-            float playerRagdollBaseImpulse = 155.0f,
-            float playerRagdollMaxImpulse = 225.0f,
-            float playerRagdollDuration = 3.0f,
+            float playerRagdollBaseImpulse = 105.0f,
+            float playerRagdollMaxImpulse = 160.0f,
+            float playerRagdollDuration = 2.8f,
             bool ragdollSmallCreatures = true,
             float smallCreatureRagdollMinSpeed = 2.2f,
-            float smallCreatureRagdollBaseImpulse = 135.0f,
-            float smallCreatureRagdollMaxImpulse = 195.0f,
-            float smallCreatureRagdollDuration = 3.0f,
+            float smallCreatureRagdollBaseImpulse = 85.0f,
+            float smallCreatureRagdollMaxImpulse = 135.0f,
+            float smallCreatureRagdollDuration = 2.6f,
             bool ragdollLargeCreatures = true,
             float largeCreatureRagdollMinSpeed = 5.5f,
-            float largeCreatureRagdollBaseImpulse = 175.0f,
-            float largeCreatureRagdollMaxImpulse = 250.0f,
-            float largeCreatureRagdollDuration = 2.8f,
-            float ragdollUpwardBoost = 0.32f)
+            float largeCreatureRagdollBaseImpulse = 120.0f,
+            float largeCreatureRagdollMaxImpulse = 180.0f,
+            float largeCreatureRagdollDuration = 2.5f,
+            float ragdollUpwardBoost = 0.22f)
         {
             Enabled = enabled;
             BasePunchDamage = basePunchDamage;
@@ -144,20 +144,20 @@ namespace Punchy.Core
             enableRagdoll: true,
             ragdollPlayersOnHaymaker: true,
             playerRagdollMinSpeed: 5.0f,
-            playerRagdollBaseImpulse: 155.0f,
-            playerRagdollMaxImpulse: 225.0f,
-            playerRagdollDuration: 3.0f,
+            playerRagdollBaseImpulse: 105.0f,
+            playerRagdollMaxImpulse: 160.0f,
+            playerRagdollDuration: 2.8f,
             ragdollSmallCreatures: true,
             smallCreatureRagdollMinSpeed: 2.2f,
-            smallCreatureRagdollBaseImpulse: 135.0f,
-            smallCreatureRagdollMaxImpulse: 195.0f,
-            smallCreatureRagdollDuration: 3.0f,
+            smallCreatureRagdollBaseImpulse: 85.0f,
+            smallCreatureRagdollMaxImpulse: 135.0f,
+            smallCreatureRagdollDuration: 2.6f,
             ragdollLargeCreatures: true,
             largeCreatureRagdollMinSpeed: 5.5f,
-            largeCreatureRagdollBaseImpulse: 175.0f,
-            largeCreatureRagdollMaxImpulse: 250.0f,
-            largeCreatureRagdollDuration: 2.8f,
-            ragdollUpwardBoost: 0.32f);
+            largeCreatureRagdollBaseImpulse: 120.0f,
+            largeCreatureRagdollMaxImpulse: 180.0f,
+            largeCreatureRagdollDuration: 2.5f,
+            ragdollUpwardBoost: 0.22f);
 
         /// <summary>
         /// Clamps invalid or inverted numeric preferences into safe operational ranges.
@@ -180,21 +180,21 @@ namespace Punchy.Core
             float vfxScale = SanitizeRange(PunchVfxScale, 0.1f, 3.0f, 1.0f);
 
             float playerMinSpeed = SanitizeRangeInclusive(PlayerRagdollMinSpeed, 0.5f, 20.0f, 5.0f);
-            float playerBaseImp = SanitizeRangeInclusive(PlayerRagdollBaseImpulse, 5.0f, 350.0f, 155.0f);
-            float playerMaxImp = SanitizeRangeInclusive(PlayerRagdollMaxImpulse, playerBaseImp, 350.0f, Math.Max(playerBaseImp, 225.0f));
-            float playerDuration = SanitizeRangeInclusive(PlayerRagdollDuration, 0.5f, 15.0f, 3.0f);
+            float playerBaseImp = SanitizeRangeInclusive(PlayerRagdollBaseImpulse, 5.0f, 350.0f, 105.0f);
+            float playerMaxImp = SanitizeRangeInclusive(PlayerRagdollMaxImpulse, playerBaseImp, 350.0f, Math.Max(playerBaseImp, 160.0f));
+            float playerDuration = SanitizeRangeInclusive(PlayerRagdollDuration, 0.5f, 15.0f, 2.8f);
 
             float smallMinSpeed = SanitizeRangeInclusive(SmallCreatureRagdollMinSpeed, 0.5f, 20.0f, 2.2f);
-            float smallBaseImp = SanitizeRangeInclusive(SmallCreatureRagdollBaseImpulse, 5.0f, 350.0f, 135.0f);
-            float smallMaxImp = SanitizeRangeInclusive(SmallCreatureRagdollMaxImpulse, smallBaseImp, 350.0f, Math.Max(smallBaseImp, 195.0f));
-            float smallDuration = SanitizeRangeInclusive(SmallCreatureRagdollDuration, 0.5f, 15.0f, 3.0f);
+            float smallBaseImp = SanitizeRangeInclusive(SmallCreatureRagdollBaseImpulse, 5.0f, 350.0f, 85.0f);
+            float smallMaxImp = SanitizeRangeInclusive(SmallCreatureRagdollMaxImpulse, smallBaseImp, 350.0f, Math.Max(smallBaseImp, 135.0f));
+            float smallDuration = SanitizeRangeInclusive(SmallCreatureRagdollDuration, 0.5f, 15.0f, 2.6f);
 
             float largeMinSpeed = SanitizeRangeInclusive(LargeCreatureRagdollMinSpeed, 0.5f, 20.0f, 5.5f);
-            float largeBaseImp = SanitizeRangeInclusive(LargeCreatureRagdollBaseImpulse, 5.0f, 350.0f, 175.0f);
-            float largeMaxImp = SanitizeRangeInclusive(LargeCreatureRagdollMaxImpulse, largeBaseImp, 350.0f, Math.Max(largeBaseImp, 250.0f));
-            float largeDuration = SanitizeRangeInclusive(LargeCreatureRagdollDuration, 0.5f, 15.0f, 2.8f);
+            float largeBaseImp = SanitizeRangeInclusive(LargeCreatureRagdollBaseImpulse, 5.0f, 350.0f, 120.0f);
+            float largeMaxImp = SanitizeRangeInclusive(LargeCreatureRagdollMaxImpulse, largeBaseImp, 350.0f, Math.Max(largeBaseImp, 180.0f));
+            float largeDuration = SanitizeRangeInclusive(LargeCreatureRagdollDuration, 0.5f, 15.0f, 2.5f);
 
-            float upwardBoost = SanitizeRangeInclusive(RagdollUpwardBoost, 0.0f, 0.50f, 0.32f);
+            float upwardBoost = SanitizeRangeInclusive(RagdollUpwardBoost, 0.0f, 0.50f, 0.22f);
 
             return new PunchConfigSnapshot(
                 Enabled,

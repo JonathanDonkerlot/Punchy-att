@@ -135,7 +135,7 @@ namespace Punchy
             in PunchConfigSnapshot config,
             MelonLogger.Instance log)
         {
-            if (!NetworkSceneManager.IsServer || !config.EnableRagdoll || !IsAvailable)
+            if (!config.EnableRagdoll || !IsAvailable)
                 return false;
 
             PunchRagdollTargetKind targetKind = ClassifyTarget(health, detector, hitCollider);
@@ -169,6 +169,13 @@ namespace Punchy
             try
             {
                 bool triggered = TriggerRagdollNoInline(targetComponent, impulse, effectiveHitPoint, decision.DurationSeconds);
+                if (config.DebugLogging)
+                {
+                    string side = NetworkSceneManager.IsServer ? "Server" : "Client";
+                    log?.Msg(
+                        $"[Punchy][Debug] Ragdoll[{side}] target='{targetComponent.name}' kind={targetKind} " +
+                        $"speed={punchSpeed:F2} impulse={impulse.magnitude:F1} dur={decision.DurationSeconds:F2}s => {triggered}");
+                }
                 if (!triggered && targetKind == PunchRagdollTargetKind.Player && config.DebugLogging)
                 {
                     log?.Msg(

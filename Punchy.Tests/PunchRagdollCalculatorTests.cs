@@ -161,7 +161,7 @@ namespace Punchy.Tests
             Assert.Equal(0.5f, extreme.PlayerRagdollMinSpeed, precision: 4);
             Assert.Equal(350.0f, extreme.PlayerRagdollBaseImpulse, precision: 4);
             Assert.Equal(350.0f, extreme.PlayerRagdollMaxImpulse, precision: 4);
-            Assert.Equal(3.0f, extreme.PlayerRagdollDuration, precision: 4);
+            Assert.Equal(2.8f, extreme.PlayerRagdollDuration, precision: 4);
             Assert.Equal(5.0f, extreme.SmallCreatureRagdollBaseImpulse, precision: 4);
             Assert.Equal(350.0f, extreme.SmallCreatureRagdollMaxImpulse, precision: 4);
             Assert.Equal(0.50f, extreme.RagdollUpwardBoost, precision: 4);

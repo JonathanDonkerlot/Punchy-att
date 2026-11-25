@@ -38,7 +38,7 @@ namespace Punchy
 
         public void RegisterPlayer(PlayerController pc)
         {
-            if (!NetworkSceneManager.IsServer || pc == null)
+            if ((!NetworkSceneManager.IsServer && !PunchRagdollBridge.IsAvailable) || pc == null)
                 return;
 
             // Ignore MainMenuPlayerController, CustomizationPlayerController, FlyCamPlayer, etc.
@@ -75,7 +75,8 @@ namespace Punchy
 
             _trackedPlayers[key] = entry;
             string playerName = pc.NetworkPlayer?.UserInfo?.Username ?? pc.name;
-            _log?.Msg($"[Punchy] Registered bare-hand punch detectors for '{playerName}'.");
+            string mode = NetworkSceneManager.IsServer ? "Server" : "Client-Ragdoll";
+            _log?.Msg($"[Punchy] Registered bare-hand punch detectors ({mode}) for '{playerName}'.");
         }
 
         public void UnregisterPlayer(PlayerController pc)
@@ -119,7 +120,7 @@ namespace Punchy
 
         public void ReconcileConnectedPlayers()
         {
-            if (!NetworkSceneManager.IsServer)
+            if (!NetworkSceneManager.IsServer && !PunchRagdollBridge.IsAvailable)
                 return;
 
             _pruneBuffer.Clear();
@@ -151,6 +152,9 @@ namespace Punchy
                     if (iplayer is Player player && player != null && player.PlayerController != null)
                         RegisterPlayer(player.PlayerController);
                 }
+
+                if (!NetworkSceneManager.IsServer && PlayerController.Current != null)
+                    RegisterPlayer(PlayerController.Current);
             }
             catch (Exception ex)
             {

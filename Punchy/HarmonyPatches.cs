@@ -67,7 +67,7 @@ namespace Punchy
         {
             try
             {
-                if (NetworkSceneManager.IsServer && __instance != null)
+                if (__instance != null && (NetworkSceneManager.IsServer || PunchRagdollBridge.IsAvailable))
                     PunchServerManager.Instance?.RegisterPlayer(__instance);
             }
             catch (Exception ex)

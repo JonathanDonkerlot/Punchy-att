@@ -54,11 +54,16 @@ namespace Punchy
 
         private void FixedUpdate()
         {
-            if (!_initialized || !NetworkSceneManager.IsServer || _config == null)
+            if (!_initialized || _config == null)
                 return;
 
             PunchConfigSnapshot cfg = _config.Snapshot;
             if (!cfg.Enabled)
+                return;
+
+            bool isServer = NetworkSceneManager.IsServer;
+            bool isClientRagdoll = !isServer && PunchRagdollBridge.IsAvailable && cfg.EnableRagdoll;
+            if (!isServer && !isClientRagdoll)
                 return;
 
             if (_owner == null || _controller == null)
@@ -114,13 +119,13 @@ namespace Punchy
                 return;
             }
 
-            DetectAndApplyHit(in context, in motion, in cfg);
+            DetectAndApplyHit(in context, in motion, in cfg, isServer);
         }
 
-        private void DetectAndApplyHit(in PunchHandContext context, in HandMotionSample motion, in PunchConfigSnapshot cfg)
+        private void DetectAndApplyHit(in PunchHandContext context, in HandMotionSample motion, in PunchConfigSnapshot cfg, bool isServer)
         {
             _evaluatedTargetsThisTick.Clear();
-            bool serverPvPEnabled = PunchDamageBridge.IsServerPvPEnabled();
+            bool serverPvPEnabled = isServer ? PunchDamageBridge.IsServerPvPEnabled() : cfg.AllowPvPPunching;
 
             Vector3 prevPos = new Vector3(motion.PreviousPosition.X, motion.PreviousPosition.Y, motion.PreviousPosition.Z);
             Vector3 currPos = new Vector3(motion.CurrentPosition.X, motion.CurrentPosition.Y, motion.CurrentPosition.Z);
@@ -191,6 +196,7 @@ namespace Punchy
                                 punchDir,
                                 handVel,
                                 serverPvPEnabled,
+                                isServer,
                                 in context,
                                 in cfg))
                         {
@@ -198,6 +204,7 @@ namespace Punchy
                         }
 
                         if (!hasSurfaceHit &&
+                            isServer &&
                             cfg.EnableSurfaceImpactVfx &&
                             !PunchDamageBridge.IsSelfCollider(hitInfo.collider, _owner))
                         {
@@ -239,6 +246,7 @@ namespace Punchy
                         punchDir,
                         handVel,
                         serverPvPEnabled,
+                        isServer,
                         in context,
                         in cfg))
                 {
@@ -246,6 +254,7 @@ namespace Punchy
                 }
 
                 if (!hasSurfaceHit &&
+                    isServer &&
                     cfg.EnableSurfaceImpactVfx &&
                     !PunchDamageBridge.IsSelfCollider(col, _owner))
                 {
@@ -281,6 +290,7 @@ namespace Punchy
             Vector3 punchDir,
             Vector3 handVel,
             bool serverPvPEnabled,
+            bool isServer,
             in PunchHandContext context,
             in PunchConfigSnapshot cfg)
         {
@@ -324,23 +334,43 @@ namespace Punchy
                 return false;
             }
 
-            if (!PunchDamageBridge.ApplyPunchHit(
-                    _owner,
-                    _controller,
-                    _handSide,
-                    candidate,
-                    detector,
-                    health,
-                    destroyable,
-                    hitPoint,
-                    hitNormal,
-                    punchDir,
-                    handVel,
-                    decision,
-                    in cfg,
-                    _log))
+            if (isServer)
             {
-                return false;
+                if (!PunchDamageBridge.ApplyPunchHit(
+                        _owner,
+                        _controller,
+                        _handSide,
+                        candidate,
+                        detector,
+                        health,
+                        destroyable,
+                        hitPoint,
+                        hitNormal,
+                        punchDir,
+                        handVel,
+                        decision,
+                        in cfg,
+                        _log))
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                // Visual-only client RagdollLib simulation: never apply damage or health changes on clients.
+                if (!PunchRagdollBridge.TryApplyPunchRagdoll(
+                        _owner,
+                        health,
+                        detector,
+                        candidate,
+                        hitPoint,
+                        punchDir,
+                        decision.Speed,
+                        in cfg,
+                        _log))
+                {
+                    return false;
+                }
             }
 
             _cooldownTracker?.RecordHit(_handSide, context.CurrentTime);
