@@ -125,6 +125,7 @@ namespace Punchy
         }
 
         public static bool TryApplyPunchRagdoll(
+            PlayerController attacker,
             HealthObject health,
             ImpactDetector detector,
             Collider hitCollider,
@@ -141,16 +142,19 @@ namespace Punchy
             if (targetKind == PunchRagdollTargetKind.None)
                 return false;
 
-            var dir = new Vec3(punchDirection.x, punchDirection.y, punchDirection.z);
-            PunchRagdollDecision decision = PunchRagdollCalculator.Evaluate(targetKind, punchSpeed, dir, in config);
-            if (!decision.ShouldRagdoll)
-                return false;
-
-            Component targetComponent = health != null
-                ? (Component)health
-                : (detector != null ? (Component)detector : hitCollider);
+            Transform targetRoot = ResolveTargetRootTransform(health, detector, hitCollider);
+            Component targetComponent = targetRoot != null
+                ? (Component)targetRoot
+                : (health != null ? (Component)health : (detector != null ? (Component)detector : hitCollider));
 
             if (targetComponent == null)
+                return false;
+
+            Vector3 knockDir = ComputeKnockbackDirection(attacker, targetComponent.transform.position, punchDirection);
+            var dir = new Vec3(knockDir.x, knockDir.y, knockDir.z);
+
+            PunchRagdollDecision decision = PunchRagdollCalculator.Evaluate(targetKind, punchSpeed, dir, in config);
+            if (!decision.ShouldRagdoll)
                 return false;
 
             var impulse = new Vector3(
@@ -158,9 +162,13 @@ namespace Punchy
                 decision.ImpulseVector.Y,
                 decision.ImpulseVector.Z);
 
+            // Offset hit point onto upper torso/chest so RagdollLib applies rotational torque across limbs & spine
+            // instead of purely translating the pelvis stiffly.
+            Vector3 effectiveHitPoint = ComputeTorqueHitPoint(targetComponent.transform.position, hitPoint);
+
             try
             {
-                bool triggered = TriggerRagdollNoInline(targetComponent, impulse, hitPoint, decision.DurationSeconds);
+                bool triggered = TriggerRagdollNoInline(targetComponent, impulse, effectiveHitPoint, decision.DurationSeconds);
                 if (!triggered && targetKind == PunchRagdollTargetKind.Player && config.DebugLogging)
                 {
                     log?.Msg(
@@ -174,6 +182,52 @@ namespace Punchy
                 log?.Warning($"[Punchy] RagdollLib invocation failed: {ex.Message}");
                 return false;
             }
+        }
+
+        private static Vector3 ComputeKnockbackDirection(
+            PlayerController attacker,
+            Vector3 targetPos,
+            Vector3 punchDirection)
+        {
+            Vector3 away = Vector3.zero;
+            if (attacker != null)
+            {
+                Vector3 origin = attacker.Head != null ? attacker.Head.position : attacker.transform.position;
+                Vector3 rawAway = targetPos - origin;
+                rawAway.y = 0f;
+                if (rawAway.sqrMagnitude > 1e-4f)
+                    away = rawAway.normalized;
+            }
+
+            Vector3 horizPunch = new Vector3(punchDirection.x, 0f, punchDirection.z);
+            if (horizPunch.sqrMagnitude > 1e-4f)
+            {
+                horizPunch.Normalize();
+                if (away.sqrMagnitude > 1e-4f)
+                {
+                    Vector3 blended = (horizPunch * 0.6f) + (away * 0.4f);
+                    if (blended.sqrMagnitude > 1e-4f)
+                        return blended.normalized;
+                }
+                return horizPunch;
+            }
+
+            if (away.sqrMagnitude > 1e-4f)
+                return away;
+
+            return punchDirection.sqrMagnitude > 1e-4f ? punchDirection.normalized : Vector3.forward;
+        }
+
+        private static Vector3 ComputeTorqueHitPoint(Vector3 rootPos, Vector3 rawHitPoint)
+        {
+            if (rawHitPoint.sqrMagnitude <= 1e-6f)
+                return rootPos + (Vector3.up * 0.6f);
+
+            float minTorqueY = rootPos.y + 0.55f;
+            if (rawHitPoint.y < minTorqueY)
+                rawHitPoint.y = rootPos.y + 0.60f;
+
+            return rawHitPoint;
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]

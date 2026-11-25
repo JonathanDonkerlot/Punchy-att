@@ -224,31 +224,32 @@ Additional lifecycle safety nets:
 | `EnableRagdoll` | `bool` | `true` | Master toggle for optional `RagdollLib` punch ragdolls |
 | `RagdollPlayersOnHaymaker` | `bool` | `true` | Enables haymaker ragdolls on `PlayerCharacter` rigs (also requires `[RagdollLib] AllowPlayerRagdoll = true`) |
 | `PlayerRagdollMinSpeed` | `float` | `5.0` | Minimum haymaker hand speed (`m/s`) to ragdoll a player |
-| `PlayerRagdollBaseImpulse` | `float` | `65.0` | Base player knockdown impulse (`N*s`, clamped `5..250`) |
-| `PlayerRagdollMaxImpulse` | `float` | `115.0` | Maximum player knockdown impulse (`N*s`, clamped `<= 250`) |
-| `PlayerRagdollDuration` | `float` | `2.5` | Player ragdoll recovery duration (`s`) |
+| `PlayerRagdollBaseImpulse` | `float` | `155.0` | Base player knockdown impulse (`N*s`, clamped `5..350`) |
+| `PlayerRagdollMaxImpulse` | `float` | `225.0` | Maximum player knockdown impulse (`N*s`, clamped `<= 350`) |
+| `PlayerRagdollDuration` | `float` | `3.0` | Player ragdoll recovery duration (`s`) |
 | `RagdollSmallCreatures` | `bool` | `true` | Enables punch ragdolls on small creatures (`Spriggull`, `Babu`, `Schmeechee`, `FireBug`, `Dragonfly`, `Wyrm`) |
 | `SmallCreatureRagdollMinSpeed` | `float` | `2.2` | Minimum punch speed (`m/s`) to ragdoll small creatures |
-| `SmallCreatureRagdollBaseImpulse` | `float` | `45.0` | Base impulse (`N*s`) for normal punches on small creatures |
-| `SmallCreatureRagdollMaxImpulse` | `float` | `85.0` | Maximum impulse (`N*s`) on small creatures |
-| `SmallCreatureRagdollDuration` | `float` | `2.2` | Small creature ragdoll recovery duration (`s`) |
+| `SmallCreatureRagdollBaseImpulse` | `float` | `135.0` | Base impulse (`N*s`) for normal punches on small creatures |
+| `SmallCreatureRagdollMaxImpulse` | `float` | `195.0` | Maximum impulse (`N*s`) on small creatures |
+| `SmallCreatureRagdollDuration` | `float` | `3.0` | Small creature ragdoll recovery duration (`s`) |
 | `RagdollLargeCreatures` | `bool` | `true` | Enables haymaker ragdolls on large creatures (`Gotera`, `GreaterGotera`, `Turabada`, `Phantom`) |
 | `LargeCreatureRagdollMinSpeed` | `float` | `5.5` | Minimum haymaker speed (`m/s`) to ragdoll large creatures |
-| `LargeCreatureRagdollBaseImpulse` | `float` | `75.0` | Base impulse (`N*s`) on large-creature haymakers |
-| `LargeCreatureRagdollMaxImpulse` | `float` | `130.0` | Maximum impulse (`N*s`) on large creatures |
-| `LargeCreatureRagdollDuration` | `float` | `2.0` | Large creature ragdoll recovery duration (`s`) |
-| `RagdollUpwardBoost` | `float` | `0.14` | Grounded upward lift ratio (`0.0` to `0.35`) |
+| `LargeCreatureRagdollBaseImpulse` | `float` | `175.0` | Base impulse (`N*s`) on large-creature haymakers |
+| `LargeCreatureRagdollMaxImpulse` | `float` | `250.0` | Maximum impulse (`N*s`) on large creatures |
+| `LargeCreatureRagdollDuration` | `float` | `2.8` | Large creature ragdoll recovery duration (`s`) |
+| `RagdollUpwardBoost` | `float` | `0.32` | Grounded upward lift ratio (`0.0` to `0.50`) |
 
 ---
 
-## 9. Optional `RagdollLib` Integration (v1.2.0+)
+## 9. Optional `RagdollLib` Integration (v1.2.1+)
 
 - **Soft Dependency Loading:** `PunchyMod` declares `[assembly: MelonOptionalDependencies("RagdollLib")]`, `Punchy.csproj` references `Mods\RagdollLib.dll` with `<Private>false</Private>`, and all references to `RagdollLib.API.RagdollAPI` are isolated inside `[MethodImpl(MethodImplOptions.NoInlining)]` calls in `PunchRagdollBridge`, guarded by `AppDomain.CurrentDomain.GetAssemblies()` detection. If `RagdollLib.dll` is not installed, `Punchy.dll` loads and runs normally without ragdolls.
 - **Target Classification (`Alta.Intelligence.Agent` subclasses verified in `Root.Township.dll`):**
-  - `Player`: `PlayerHealth` or `PlayerCharacter` ancestor -> requires heavy haymaker (`>= 5.0 m/s`, `65..115 N*s`, `2.5s`), plus `[RagdollLib] AllowPlayerRagdoll = true`.
-  - `SmallCreature`: `Spriggull`, `Babu`, `Schmeechee`, `FireBug`, `Dragonfly`, `Wyrm` -> triggers on normal punch (`>= 2.2 m/s`, `45..85 N*s`, `2.2s`).
-  - `LargeCreature`: `Gotera`, `GreaterGotera`, `Turabada`, `Phantom` (or any other `Agent` fallback) -> requires heavy haymaker (`>= 5.5 m/s`, `75..130 N*s`, `2.0s`).
+  - `Player`: `PlayerHealth` or `PlayerCharacter` ancestor -> requires heavy haymaker (`>= 5.0 m/s`, `155..225 N*s`, `3.0s`), plus `[RagdollLib] AllowPlayerRagdoll = true`.
+  - `SmallCreature`: `Spriggull`, `Babu`, `Schmeechee`, `FireBug`, `Dragonfly`, `Wyrm` -> triggers on normal punch (`>= 2.2 m/s`, `135..195 N*s`, `3.0s`).
+  - `LargeCreature`: `Gotera`, `GreaterGotera`, `Turabada`, `Phantom` (or any other `Agent` fallback) -> requires heavy haymaker (`>= 5.5 m/s`, `175..250 N*s`, `2.8s`).
   - Non-creature static props / training dummies (`combat_dummy(Clone)`) without `Agent` or `PlayerCharacter` return `None`.
-- **Anti-Moon Impulse Shaping (`PunchRagdollCalculator`):**
-  - Vertical component of the incoming punch direction is clamped to `[-0.25, +0.35]` before blending `RagdollUpwardBoost` (`0.14`), and all impulse magnitudes are clamped (`<= 250 N*s` in `PunchConfigSnapshot.Sanitize()`).
+- **Upper-Body Torque Targeting & Anti-Moon Shaping (`PunchRagdollBridge` + `PunchRagdollCalculator`):**
+  - Resolves and passes `NetworkEntity.PrefabRoot.transform` directly into `RagdollAPI.TriggerRagdoll(...)`, blends horizontal punch direction (`60%`) with attacker-to-target away direction (`40%`), and lifts hit points below `root.y + 0.55m` to `root.y + 0.60m` (upper torso/chest) so `RagdollController.ApplyImpulse` creates visible limb/spine rotational tumble instead of stiff pelvis sliding.
+  - Vertical component of the incoming punch direction is projected horizontally and capped (`<= 0.50`), and all impulse magnitudes are clamped (`<= 350 N*s` in `PunchConfigSnapshot.Sanitize()`).
   - When `RagdollAPI.TriggerRagdoll(...)` succeeds on a hit, `PunchDamageBridge` skips its fallback `Rigidbody.AddForceAtPosition` knockback so forces never double-stack.

@@ -5,7 +5,7 @@ using MelonLoader.Utils;
 using Punchy.Core;
 using UnityEngine;
 
-[assembly: MelonInfo(typeof(Punchy.PunchyMod), "Punchy", "1.2.0", "Punchy")]
+[assembly: MelonInfo(typeof(Punchy.PunchyMod), "Punchy", "1.2.1", "Punchy")]
 [assembly: MelonGame("Alta", "A Township Tale")]
 [assembly: MelonOptionalDependencies("RagdollLib")]
 
@@ -49,7 +49,7 @@ namespace Punchy
 
             PunchConfigSnapshot snap = _config.Snapshot;
             LoggerInstance.Msg(
-                $"[Punchy] v1.2.0 Initialized (Server-Side Bare-Handed Combat) | " +
+                $"[Punchy] v1.2.1 Initialized (Server-Side Bare-Handed Combat) | " +
                 $"Enabled={snap.Enabled}, BaseDmg={snap.BasePunchDamage:F2}, MaxDmg={snap.MaxPunchDamage:F2}, " +
                 $"VelScaling={snap.EnableVelocityScaling}, MinSpeed={snap.MinPunchSpeed:F2} m/s, " +
                 $"Cooldown={snap.PunchCooldownSeconds:F2}s, RequireFist={snap.RequireClosedFist}, AllowPvP={snap.AllowPvPPunching}, " +

@@ -13,12 +13,12 @@
 - **Native Hit VFX/SFX Replication & Kinetic Impact Feedback:**
   - Broadcasts native creature/prop hit effects (such as the orange Spriggull hit burst and blunt sound) to unmodded clients via ATT's `ImpactDetectorSync` pipeline.
   - Layers pooled kinetic shockwave, spark, and dust impact particles plus `FistBump` / `WoodThump` audio on non-headless hosts.
-- **Realistic `RagdollLib` Physics Integration (v1.2.0+):**
-  - Integrates softly with `RagdollLib.dll` (`[assembly: MelonOptionalDependencies("RagdollLib")]`) — if `RagdollLib.dll` is present in `Mods\`, punches trigger realistic procedural ragdoll knockdowns without launching targets to the moon:
-    - **Small Creatures (`Spriggull`, `Babu`, `Schmeechee`, `FireBug`, `Dragonfly`, `Wyrm`):** Any normal punch (`>= 2.2 m/s`) ragdolls them with bounded grounded force (`45`–`85 N*s`, `2.2s` recovery).
-    - **Players:** Require a heavy **haymaker** (`>= 5.0 m/s`) to ragdoll (`65`–`115 N*s`, `2.5s` recovery); everyday light jabs will damage without ragdolling.
-    - **Large Creatures (`Gotera`, `GreaterGotera`, `Turabada`, `Phantom`):** Require a heavy haymaker (`>= 5.5 m/s`, `75`–`130 N*s`, `2.0s` recovery).
-    - **Anti-Moon Physics Guard:** Vertical punch components and impulse magnitudes are clamped (`<= 250 N*s`, upward lift capped `<= 0.35`) so uppercuts knock targets onto the ground rather than into orbit.
+- **Realistic `RagdollLib` Physics Integration (v1.2.1+):**
+  - Integrates softly with `RagdollLib.dll` (`[assembly: MelonOptionalDependencies("RagdollLib")]`) — if `RagdollLib.dll` is present in `Mods\`, punches trigger full-rig procedural ragdoll knockdowns without launching targets to the moon:
+    - **Small Creatures (`Spriggull`, `Babu`, `Schmeechee`, `FireBug`, `Dragonfly`, `Wyrm`):** Any normal punch (`>= 2.2 m/s`) ragdolls them with lively grounded tumble impulse (`135`–`195 N*s`, `3.0s` recovery).
+    - **Players:** Require a heavy **haymaker** (`>= 5.0 m/s`) to ragdoll (`155`–`225 N*s`, `3.0s` recovery); everyday light jabs will damage without ragdolling.
+    - **Large Creatures (`Gotera`, `GreaterGotera`, `Turabada`, `Phantom`):** Require a heavy haymaker (`>= 5.5 m/s`, `175`–`250 N*s`, `2.8s` recovery).
+    - **Anti-Moon Physics & Torque Targeting:** Targets the entity `PrefabRoot` at an upper-torso torque height (`>= +0.55–0.60m`) so limbs and spine articulate naturally, clamps vertical punch components (`<= 0.50`), and caps impulse magnitudes (`<= 350 N*s`).
 - **Anti-Exploit & False-Positive Guards:**
   - **Empty-Hand Lock:** Swinging while holding or interacting with any weapon, tool, torch, pouch, or world interactable never triggers fist damage (plus a `0.15s` post-release grace window).
   - **Closed-Fist Verification:** Reads ATT's replicated `HandGestureController` state across OpenXR/Quest grip axis, explicit gesture bitmasks, and Valve Index finger curls (with a `0.12s` pose-lag grace window and graceful fallback).
@@ -73,20 +73,20 @@ All settings live under `[Punchy]` and reload cleanly via MelonLoader preference
 | `EnableRagdoll` | `bool` | `true` | Master toggle for triggering `RagdollLib` physics on punches (no-op if `RagdollLib.dll` is not installed). |
 | `RagdollPlayersOnHaymaker` | `bool` | `true` | Enables ragdolling players on heavy haymakers (also requires `[RagdollLib] AllowPlayerRagdoll = true`). |
 | `PlayerRagdollMinSpeed` | `float` | `5.0` | Minimum haymaker hand speed (`m/s`) required to ragdoll a player. |
-| `PlayerRagdollBaseImpulse` | `float` | `65.0` | Base impulse (`N*s`) applied at `PlayerRagdollMinSpeed` (clamped `<= 250`). |
-| `PlayerRagdollMaxImpulse` | `float` | `115.0` | Maximum impulse (`N*s`) for fastest player haymakers (clamped `<= 250`). |
-| `PlayerRagdollDuration` | `float` | `2.5` | Seconds before a haymaker-ragdolled player recovers. |
+| `PlayerRagdollBaseImpulse` | `float` | `155.0` | Base impulse (`N*s`) applied at `PlayerRagdollMinSpeed` (clamped `<= 350`). |
+| `PlayerRagdollMaxImpulse` | `float` | `225.0` | Maximum impulse (`N*s`) for fastest player haymakers (clamped `<= 350`). |
+| `PlayerRagdollDuration` | `float` | `3.0` | Seconds before a haymaker-ragdolled player recovers. |
 | `RagdollSmallCreatures` | `bool` | `true` | Enables ragdolling small creatures (`Spriggull`, `Babu`, `Schmeechee`, `FireBug`, `Dragonfly`, `Wyrm`). |
 | `SmallCreatureRagdollMinSpeed` | `float` | `2.2` | Minimum punch speed (`m/s`) to ragdoll small creatures (`2.2` = any normal punch). |
-| `SmallCreatureRagdollBaseImpulse` | `float` | `45.0` | Base impulse (`N*s`) for normal punches on Spriggulls and small creatures. |
-| `SmallCreatureRagdollMaxImpulse` | `float` | `85.0` | Maximum capped impulse (`N*s`) for heavy punches on small creatures. |
-| `SmallCreatureRagdollDuration` | `float` | `2.2` | Seconds before a ragdolled small creature recovers. |
+| `SmallCreatureRagdollBaseImpulse` | `float` | `135.0` | Base impulse (`N*s`) for normal punches on Spriggulls and small creatures. |
+| `SmallCreatureRagdollMaxImpulse` | `float` | `195.0` | Maximum capped impulse (`N*s`) for heavy punches on small creatures. |
+| `SmallCreatureRagdollDuration` | `float` | `3.0` | Seconds before a ragdolled small creature recovers. |
 | `RagdollLargeCreatures` | `bool` | `true` | Enables ragdolling large creatures (`Gotera`, `GreaterGotera`, `Turabada`, `Phantom`). |
 | `LargeCreatureRagdollMinSpeed` | `float` | `5.5` | Minimum haymaker speed (`m/s`) required to ragdoll large creatures. |
-| `LargeCreatureRagdollBaseImpulse` | `float` | `75.0` | Base impulse (`N*s`) applied on large-creature haymakers. |
-| `LargeCreatureRagdollMaxImpulse` | `float` | `130.0` | Maximum capped impulse (`N*s`) on large-creature haymakers. |
-| `LargeCreatureRagdollDuration` | `float` | `2.0` | Seconds before a ragdolled large creature recovers. |
-| `RagdollUpwardBoost` | `float` | `0.14` | Subtle upward lift ratio (`0.0` to `0.35`) for natural grounded knockdowns. |
+| `LargeCreatureRagdollBaseImpulse` | `float` | `175.0` | Base impulse (`N*s`) applied on large-creature haymakers. |
+| `LargeCreatureRagdollMaxImpulse` | `float` | `250.0` | Maximum capped impulse (`N*s`) on large-creature haymakers. |
+| `LargeCreatureRagdollDuration` | `float` | `2.8` | Seconds before a ragdolled large creature recovers. |
+| `RagdollUpwardBoost` | `float` | `0.32` | Subtle upward lift ratio (`0.0` to `0.50`) for grounded full-rig knockdowns. |
 
 ---
 

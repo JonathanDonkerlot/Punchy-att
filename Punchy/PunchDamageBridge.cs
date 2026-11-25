@@ -317,6 +317,7 @@ namespace Punchy
 
                 // Trigger procedural ragdoll via RagdollLib when installed and velocity threshold is met.
                 bool ragdolled = PunchRagdollBridge.TryApplyPunchRagdoll(
+                    attacker,
                     health,
                     detector,
                     hitCollider,

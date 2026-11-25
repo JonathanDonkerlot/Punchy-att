@@ -184,7 +184,7 @@ namespace Punchy
 
             PlayerRagdollBaseImpulse = _category.CreateEntry(
                 "PlayerRagdollBaseImpulse",
-                65.0f,
+                155.0f,
                 "Player Ragdoll Base Impulse",
                 "Realistic base impulse (N*s) applied to a player knocked down by a minimum-threshold haymaker.",
                 false,
@@ -193,16 +193,16 @@ namespace Punchy
 
             PlayerRagdollMaxImpulse = _category.CreateEntry(
                 "PlayerRagdollMaxImpulse",
-                115.0f,
+                225.0f,
                 "Player Ragdoll Max Impulse",
-                "Maximum capped impulse (N*s) for fastest haymakers against players (capped at 250 N*s to prevent unrealistic launches).",
+                "Maximum capped impulse (N*s) for fastest haymakers against players (capped at 350 N*s to prevent unrealistic launches).",
                 false,
                 false,
                 null);
 
             PlayerRagdollDuration = _category.CreateEntry(
                 "PlayerRagdollDuration",
-                2.5f,
+                3.0f,
                 "Player Ragdoll Duration (s)",
                 "Seconds before a haymaker-ragdolled player recovers back to normal stance.",
                 false,
@@ -229,7 +229,7 @@ namespace Punchy
 
             SmallCreatureRagdollBaseImpulse = _category.CreateEntry(
                 "SmallCreatureRagdollBaseImpulse",
-                45.0f,
+                135.0f,
                 "Small Creature Ragdoll Base Impulse",
                 "Realistic base impulse (N*s) for normal punches against Spriggulls and small creatures.",
                 false,
@@ -238,7 +238,7 @@ namespace Punchy
 
             SmallCreatureRagdollMaxImpulse = _category.CreateEntry(
                 "SmallCreatureRagdollMaxImpulse",
-                85.0f,
+                195.0f,
                 "Small Creature Ragdoll Max Impulse",
                 "Maximum capped impulse (N*s) for heavy punches against small creatures (prevents launching to the moon).",
                 false,
@@ -247,7 +247,7 @@ namespace Punchy
 
             SmallCreatureRagdollDuration = _category.CreateEntry(
                 "SmallCreatureRagdollDuration",
-                2.2f,
+                3.0f,
                 "Small Creature Ragdoll Duration (s)",
                 "Seconds before a ragdolled small creature recovers.",
                 false,
@@ -274,7 +274,7 @@ namespace Punchy
 
             LargeCreatureRagdollBaseImpulse = _category.CreateEntry(
                 "LargeCreatureRagdollBaseImpulse",
-                75.0f,
+                175.0f,
                 "Large Creature Ragdoll Base Impulse",
                 "Realistic base impulse (N*s) applied when a haymaker ragdolls a large creature.",
                 false,
@@ -283,7 +283,7 @@ namespace Punchy
 
             LargeCreatureRagdollMaxImpulse = _category.CreateEntry(
                 "LargeCreatureRagdollMaxImpulse",
-                130.0f,
+                250.0f,
                 "Large Creature Ragdoll Max Impulse",
                 "Maximum capped impulse (N*s) against large creatures.",
                 false,
@@ -292,7 +292,7 @@ namespace Punchy
 
             LargeCreatureRagdollDuration = _category.CreateEntry(
                 "LargeCreatureRagdollDuration",
-                2.0f,
+                2.8f,
                 "Large Creature Ragdoll Duration (s)",
                 "Seconds before a ragdolled large creature recovers.",
                 false,
@@ -301,9 +301,9 @@ namespace Punchy
 
             RagdollUpwardBoost = _category.CreateEntry(
                 "RagdollUpwardBoost",
-                0.14f,
+                0.32f,
                 "Ragdoll Upward Boost",
-                "Subtle upward lift ratio (0.0 to 0.35) blended into punch impulses for grounded knockdowns.",
+                "Subtle upward lift ratio (0.0 to 0.50) blended into punch impulses for grounded knockdowns.",
                 false,
                 false,
                 null);
@@ -329,20 +329,20 @@ namespace Punchy
                 enableRagdoll: EnableRagdoll?.Value ?? true,
                 ragdollPlayersOnHaymaker: RagdollPlayersOnHaymaker?.Value ?? true,
                 playerRagdollMinSpeed: PlayerRagdollMinSpeed?.Value ?? 5.0f,
-                playerRagdollBaseImpulse: PlayerRagdollBaseImpulse?.Value ?? 65.0f,
-                playerRagdollMaxImpulse: PlayerRagdollMaxImpulse?.Value ?? 115.0f,
-                playerRagdollDuration: PlayerRagdollDuration?.Value ?? 2.5f,
+                playerRagdollBaseImpulse: PlayerRagdollBaseImpulse?.Value ?? 155.0f,
+                playerRagdollMaxImpulse: PlayerRagdollMaxImpulse?.Value ?? 225.0f,
+                playerRagdollDuration: PlayerRagdollDuration?.Value ?? 3.0f,
                 ragdollSmallCreatures: RagdollSmallCreatures?.Value ?? true,
                 smallCreatureRagdollMinSpeed: SmallCreatureRagdollMinSpeed?.Value ?? 2.2f,
-                smallCreatureRagdollBaseImpulse: SmallCreatureRagdollBaseImpulse?.Value ?? 45.0f,
-                smallCreatureRagdollMaxImpulse: SmallCreatureRagdollMaxImpulse?.Value ?? 85.0f,
-                smallCreatureRagdollDuration: SmallCreatureRagdollDuration?.Value ?? 2.2f,
+                smallCreatureRagdollBaseImpulse: SmallCreatureRagdollBaseImpulse?.Value ?? 135.0f,
+                smallCreatureRagdollMaxImpulse: SmallCreatureRagdollMaxImpulse?.Value ?? 195.0f,
+                smallCreatureRagdollDuration: SmallCreatureRagdollDuration?.Value ?? 3.0f,
                 ragdollLargeCreatures: RagdollLargeCreatures?.Value ?? true,
                 largeCreatureRagdollMinSpeed: LargeCreatureRagdollMinSpeed?.Value ?? 5.5f,
-                largeCreatureRagdollBaseImpulse: LargeCreatureRagdollBaseImpulse?.Value ?? 75.0f,
-                largeCreatureRagdollMaxImpulse: LargeCreatureRagdollMaxImpulse?.Value ?? 130.0f,
-                largeCreatureRagdollDuration: LargeCreatureRagdollDuration?.Value ?? 2.0f,
-                ragdollUpwardBoost: RagdollUpwardBoost?.Value ?? 0.14f);
+                largeCreatureRagdollBaseImpulse: LargeCreatureRagdollBaseImpulse?.Value ?? 175.0f,
+                largeCreatureRagdollMaxImpulse: LargeCreatureRagdollMaxImpulse?.Value ?? 250.0f,
+                largeCreatureRagdollDuration: LargeCreatureRagdollDuration?.Value ?? 2.8f,
+                ragdollUpwardBoost: RagdollUpwardBoost?.Value ?? 0.32f);
 
             Snapshot = raw.Sanitize();
         }

@@ -47,8 +47,7 @@ namespace Punchy.Core
         private const float PlayerScalingSpanSpeed = 3.0f;
         private const float SmallCreatureScalingSpanSpeed = 3.5f;
         private const float LargeCreatureScalingSpanSpeed = 3.0f;
-        private const float MinDirectionVerticalComponent = -0.25f;
-        private const float MaxDirectionVerticalComponent = 0.35f;
+        private const float MaxDirectionVerticalComponent = 0.50f;
 
         private static readonly string[] SmallCreatureNames =
         {
@@ -101,7 +100,7 @@ namespace Punchy.Core
             float effectiveMax = Math.Max(baseImpulse, maxImpulse);
             float magnitude = baseImpulse + ((effectiveMax - baseImpulse) * t);
 
-            float upwardBoost = Clamp(config.RagdollUpwardBoost, 0f, 0.35f);
+            float upwardBoost = Clamp(config.RagdollUpwardBoost, 0f, 0.50f);
             Vec3 impulseDir = ComputeGroundedDirection(punchDirection, upwardBoost);
             Vec3 impulseVec = impulseDir * magnitude;
 

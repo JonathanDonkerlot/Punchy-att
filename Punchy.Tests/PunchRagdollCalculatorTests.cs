@@ -159,12 +159,12 @@ namespace Punchy.Tests
                 ragdollUpwardBoost: 5.0f).Sanitize();
 
             Assert.Equal(0.5f, extreme.PlayerRagdollMinSpeed, precision: 4);
-            Assert.Equal(250.0f, extreme.PlayerRagdollBaseImpulse, precision: 4);
-            Assert.Equal(250.0f, extreme.PlayerRagdollMaxImpulse, precision: 4);
-            Assert.Equal(2.5f, extreme.PlayerRagdollDuration, precision: 4);
+            Assert.Equal(350.0f, extreme.PlayerRagdollBaseImpulse, precision: 4);
+            Assert.Equal(350.0f, extreme.PlayerRagdollMaxImpulse, precision: 4);
+            Assert.Equal(3.0f, extreme.PlayerRagdollDuration, precision: 4);
             Assert.Equal(5.0f, extreme.SmallCreatureRagdollBaseImpulse, precision: 4);
-            Assert.Equal(250.0f, extreme.SmallCreatureRagdollMaxImpulse, precision: 4);
-            Assert.Equal(0.35f, extreme.RagdollUpwardBoost, precision: 4);
+            Assert.Equal(350.0f, extreme.SmallCreatureRagdollMaxImpulse, precision: 4);
+            Assert.Equal(0.50f, extreme.RagdollUpwardBoost, precision: 4);
 
             PunchConfigSnapshot zeroUp = new PunchConfigSnapshot(ragdollUpwardBoost: 0.0f).Sanitize();
             Assert.Equal(0.0f, zeroUp.RagdollUpwardBoost, precision: 4);
